@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Which Committee Are You?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#eef2f0; --surface:#ffffff; --ink:#17202b; --muted:#5b6a70; --line:#d3ddd8;
+  --accent:#ff6b1a; --accent-deep:#c94a00; --accent-soft:#fff1e8;
+  --panel:#17202b; --panel-ink:#f3f6f4;
+  --feed:#f0ad00; --feed-ink:#241a00; --mkt:#e0413f; --log:#2c6fd6; --hlth:#1f9d61;
+  --agree:#1f9d61; --dis:#7b5cd6; --neutral:#9aa7ad;
+  --good:#1f9d61; --bad:#e0413f; --radius:14px;
+  --display:"Bricolage Grotesque", Figtree, system-ui, sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree, system-ui, -apple-system, "Segoe UI", sans-serif;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+.display{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-height:1.05;text-wrap:balance;margin:0}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:700;color:var(--muted);margin:0}
+.muted{color:var(--muted);margin:0}
+.btn{font:inherit;font-weight:700;border:0;border-radius:999px;padding:.8em 1.6em;cursor:pointer;background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-deep)}
+.btn.primary:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 var(--accent-deep)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:.4em 1em;font-size:.85rem}
+.btn.block{width:100%;font-size:1.15rem}
+.linkbtn{font:inherit;background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;justify-self:start}
+:focus-visible{outline:3px solid var(--log);outline-offset:2px}
+.dots{display:flex;gap:6px}
+.dots i{width:14px;height:14px;border-radius:4px;display:block}
+.dots i:nth-child(1){background:var(--feed)}.dots i:nth-child(2){background:var(--mkt)}.dots i:nth-child(3){background:var(--log)}.dots i:nth-child(4){background:var(--hlth)}
+
+/* Landing */
+.landing{max-width:980px;margin:0 auto;padding-block:clamp(32px,8vw,88px);padding-inline:16px;display:grid;gap:36px}
+.brand{display:grid;gap:14px}
+.brand h1{font-size:clamp(2.8rem,9vw,5.6rem)}
+.brand p{font-size:1.25rem;color:var(--muted);margin:0;max-width:38ch}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;display:grid;gap:12px;align-content:start}
+.card h2{font-family:var(--display);font-size:1.6rem;margin:0}
+.card p{margin:0;color:var(--muted)}
+.card form{display:grid;gap:10px}
+.card label{font-weight:700}
+
+/* Host */
+.host{display:grid;grid-template-columns:1fr;height:100dvh}
+.host.with-panel{grid-template-columns:minmax(250px,320px) minmax(0,1fr)}
+.joinpanel{background:var(--panel);color:var(--panel-ink);padding:28px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.joinpanel .qr{background:#fff;padding:10px;border-radius:12px;width:100%;max-width:240px}
+.joinpanel .qr img{width:100%;display:block;image-rendering:pixelated}
+.qr-fail{color:var(--ink);margin:0;padding:24px 8px;font-weight:700}
+.qr-warn{margin:0;background:#ffd84d;color:#241a00;border-radius:10px;padding:10px 12px;font-size:.9rem;font-weight:600;max-width:260px}
+.joinpanel h3{font-family:var(--display);font-size:1.6rem;margin:6px 0 0}
+.joinpanel .url{font-size:1.05rem;word-break:break-all;margin:0;opacity:.85}
+.joinpanel .code{font-family:var(--display);font-weight:800;font-size:3.4rem;letter-spacing:.08em;line-height:1}
+.stage{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--surface);font-size:1.05rem;flex-wrap:wrap}
+.code-pill{font-weight:800;letter-spacing:.12em;background:var(--ink);color:var(--bg);padding:2px 10px;border-radius:8px}
+.grow{flex:1}
+.count{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.screen{padding:20px clamp(16px,3vw,32px);min-height:0;overflow:auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:16px}
+.controls{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.hint{margin-right:auto;color:var(--muted)}
+
+.host-head{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.host-head h1{font-size:clamp(2rem,4vw,3.4rem)}
+.stats{display:flex;gap:28px;margin-left:auto}
+.stat b{display:block;font-family:var(--display);font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-weight:600}
+.share{display:flex;height:18px;border-radius:99px;overflow:hidden;background:var(--line)}
+.share span{transition:flex-grow .5s ease-out;flex-basis:0}
+.tally{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;min-height:0}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;min-height:180px;overflow:hidden}
+.col-head{display:flex;align-items:center;gap:10px;padding:12px 16px;color:#fff}
+.col-head .emo{font-size:1.6rem;line-height:1}
+.col-head .nm{font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.1}
+.col-head .ty{font-size:.85rem;opacity:.9;font-weight:600}
+.col-head .n{margin-left:auto;font-family:var(--display);font-weight:800;font-size:2.2rem;font-variant-numeric:tabular-nums}
+.col-names{list-style:none;margin:0;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;overflow:auto;min-height:0}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border-radius:999px;padding:4px 12px 4px 6px;font-weight:700;font-size:1rem;animation:pop .35s ease-out}
+.chip .av{font-size:1.3rem;line-height:1}
+.chip small{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.chip.off{opacity:.45}
+.answering{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.answering .eyebrow{margin-right:6px}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.c-feeding{background:var(--feed);color:var(--feed-ink)}.c-marketing{background:var(--mkt)}.c-logistics{background:var(--log)}.c-health{background:var(--hlth)}
+
+/* Phone / player */
+.phone{max-width:520px;margin:0 auto;padding-block:16px 40px;padding-inline:16px;display:grid;gap:14px;align-content:start}
+.phone-head{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;color:var(--muted)}
+.logo{font-family:var(--display);font-weight:800;color:var(--ink);font-size:1.25rem;display:flex;gap:10px;align-items:center}
+.logo .dots i{width:10px;height:10px;border-radius:3px}
+.me{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.join{display:grid;gap:10px}
+.join > label{font-weight:700;margin-top:4px}
+.big-in{font:inherit;font-size:1.15rem;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+.big-in:focus{border-color:var(--accent);outline:none}
+.big-in.code{text-transform:uppercase;letter-spacing:.25em;font-weight:800;text-align:center;font-size:1.6rem}
+.avatars{border:0;padding:0;margin:4px 0 0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.avatars legend{font-weight:700;margin-bottom:8px;padding:0}
+.av-opt{position:relative}
+.av-opt input{position:absolute;opacity:0;pointer-events:none}
+.av-opt span{display:grid;place-items:center;aspect-ratio:1;font-size:1.7rem;border-radius:12px;background:var(--surface);border:2px solid var(--line);cursor:pointer}
+.av-opt input:checked + span{border-color:var(--accent);background:var(--accent-soft)}
+.av-opt input:focus-visible + span{outline:3px solid var(--log);outline-offset:2px}
+.err{color:var(--bad);font-weight:700;margin:0}
+.intro{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:grid;gap:8px}
+.intro h2{font-family:var(--display);font-size:1.5rem;margin:0}
+
+/* 16Personalities-style questionnaire */
+.quiz{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+.qtop{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:14px 12px;display:grid;gap:8px}
+.qtop-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;color:var(--muted);font-size:.95rem}
+.prog{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog span{display:block;height:100%;width:calc(var(--p) * 100%);background:var(--accent);transition:width .3s ease-out}
+.qintro{text-align:center;padding:26px 0 6px}
+.qintro h1{font-size:clamp(1.8rem,5vw,2.6rem)}
+.qintro p{color:var(--muted);margin:8px 0 0}
+.stmt{padding:40px 0 36px;border-bottom:1px solid var(--line);text-align:center;transition:opacity .3s}
+.stmt.done:not(.active){opacity:.45}
+.stmt.upcoming{opacity:.45}
+.stmt p{font-size:clamp(1.15rem,2.8vw,1.5rem);font-weight:600;max-width:36ch;margin:0 auto 24px;text-wrap:balance}
+.scale{display:flex;align-items:center;justify-content:center;gap:clamp(6px,2.2vw,20px)}
+.scale .side{font-weight:700;font-size:1.15rem;width:6em}
+.scale .side.a{color:var(--agree);text-align:right}
+.scale .side.d{color:var(--dis);text-align:left}
+.dot{--s:40px;width:var(--s);height:var(--s);border-radius:50%;border:3px solid var(--c);background:transparent;cursor:pointer;flex:none;padding:0;transition:background .15s, transform .15s;position:relative}
+.dot.s3{--s:62px}.dot.s2{--s:50px}.dot.s1{--s:40px}.dot.s0{--s:32px}
+.dot.a{--c:var(--agree)}.dot.n{--c:var(--neutral)}.dot.d{--c:var(--dis)}
+.dot:hover{background:color-mix(in srgb, var(--c) 25%, transparent)}
+.dot.on{background:var(--c);transform:scale(1.06)}
+.dot.on::after{content:"";position:absolute;inset:0;margin:auto;width:32%;height:18%;border:solid #fff;border-width:0 0 3px 3px;transform:translateY(-15%) rotate(-45deg)}
+.sm-sides{display:none;justify-content:space-between;font-weight:700;margin:12px auto 0;max-width:380px}
+.sm-sides .a{color:var(--agree)}.sm-sides .d{color:var(--dis)}
+.qnav{display:flex;justify-content:center;gap:12px;padding-top:36px}
+.qnav .btn{min-width:180px;font-size:1.1rem}
+
+.result-hero{text-align:center;padding:36px 16px 32px;border-radius:0 0 28px 28px;display:grid;gap:8px;justify-items:center;color:#fff}
+.result-hero .eyebrow{color:currentColor;opacity:.85}
+.result-hero .emo{font-size:4rem;line-height:1;width:112px;height:112px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;margin-bottom:6px}
+.result-hero h1{font-size:clamp(2.6rem,9vw,4rem)}
+.result-hero .sub{font-size:1.2rem;font-weight:700;margin:0}
+.result-body{max-width:560px;margin:0 auto;padding:24px 16px 48px;display:grid;gap:22px}
+.blurb{font-size:1.2rem;font-weight:600;margin:0}
+.desc{margin:0;color:var(--muted);font-size:1.05rem}
+.bars{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.bar-row{display:grid;gap:6px}
+.bar-top{display:flex;justify-content:space-between;font-weight:700}
+.bar-top span:last-child{font-variant-numeric:tabular-nums}
+.track{height:12px;border-radius:99px;background:var(--bg);overflow:hidden}
+.track span{display:block;height:100%;width:calc(var(--p) * 1%);border-radius:99px;transition:width .8s ease-out}
+.sent{text-align:center;font-weight:700;margin:0}
+.sent.ok{color:var(--good)}
+.lead{background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;margin:0;font-weight:600}
+
+#status{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:10;max-width:calc(100% - 32px);text-align:center}
+
+@media (max-width:900px){
+  .tally{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:820px){
+  .host,.host.with-panel{grid-template-columns:1fr;height:auto;min-height:100dvh}
+  .joinpanel{flex-direction:row;flex-wrap:wrap;padding:16px}
+  .joinpanel .qr{max-width:140px}
+  .joinpanel .code{font-size:2.4rem}
+  .stats{margin-left:0}
+}
+@media (max-width:600px){
+  .scale .side{display:none}
+  .sm-sides{display:flex}
+  .dot.s3{--s:48px}.dot.s2{--s:40px}.dot.s1{--s:32px}.dot.s0{--s:26px}
+  .stmt{padding:32px 0 28px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="status" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+const COMMITTEES = {
+  feeding: {
+    name: 'Feeding', type: 'The Caretaker', emoji: '🍽️', cls: 'c-feeding', color: 'var(--feed)', lead: 'Ciel and Martijn',
+    blurb: 'Steady and reliable. Rain or shine, the cats can count on you.',
+    desc: "You'd join the lunch and dinner rounds across USC, CMO and PSB, keep the bowls clean, and be the first to notice when a regular cat goes missing.",
+  },
+  marketing: {
+    name: 'Marketing', type: 'The Storyteller', emoji: '📸', cls: 'c-marketing', color: 'var(--mkt)', lead: 'Maggie',
+    blurb: 'You make people care, through photos, posts and words.',
+    desc: "You'd shoot photos and videos, design pubmats, write captions and help run our Facebook, Instagram and LinkedIn so the whole campus falls for the cats.",
+  },
+  logistics: {
+    name: 'Logistics', type: 'The Organizer', emoji: '📦', cls: 'c-logistics', color: 'var(--log)', lead: 'Ghela and Julie',
+    blurb: 'You plan ahead, keep supplies stocked and make events run.',
+    desc: "You'd track food and supplies, set up events, and reach out to Barangay San Antonio, the Pasig City vet office and partner NGOs.",
+  },
+  health: {
+    name: 'Health', type: 'The Guardian', emoji: '🩺', cls: 'c-health', color: 'var(--hlth)', lead: 'Ghela',
+    blurb: "Calm under pressure. You notice when something's wrong.",
+    desc: "You'd help during check-ups, CNVR and vaccination drives, and keep an eye on sick or injured cats until they're back on their paws.",
+  },
+};
+const ORDER = ['feeding', 'marketing', 'logistics', 'health'];
+
+const STATEMENTS = [
+  { c: 'feeding', t: "I'd happily keep a fixed weekly slot if it means the cats never miss a meal." },
+  { c: 'feeding', t: 'When I promise to show up, I show up, rain or shine.' },
+  { c: 'feeding', t: 'I enjoy simple hands-on routines, like prepping food and washing bowls.' },
+  { c: 'feeding', t: "I'd notice right away if a regular cat didn't show up to eat." },
+  { c: 'feeding', t: 'Spending my lunch or after-class break with the cats sounds like a good time.' },
+  { c: 'marketing', t: "I'm usually the one taking photos or videos when my friends hang out." },
+  { c: 'marketing', t: 'I have ideas for posts that would make people care about the campus cats.' },
+  { c: 'marketing', t: 'I like designing things like pubmats, posters or stickers.' },
+  { c: 'marketing', t: 'Writing captions or scripts comes easily to me.' },
+  { c: 'marketing', t: "I keep up with what's trending on social media." },
+  { c: 'logistics', t: 'I like making lists and keeping track of supplies.' },
+  { c: 'logistics', t: "I'm comfortable messaging offices, vets or partner groups to get things done." },
+  { c: 'logistics', t: "At events, I'm happiest setting up and making sure everything runs on time." },
+  { c: 'logistics', t: 'I think ahead about what could go wrong and plan for it.' },
+  { c: 'logistics', t: "I don't mind handling budgets, receipts and reimbursements." },
+  { c: 'health', t: 'I stay calm when an animal is hurt or sick.' },
+  { c: 'health', t: "I'd like to learn basic first aid and care for cats." },
+  { c: 'health', t: "I don't mind helping hold a cat still during a check-up." },
+  { c: 'health', t: 'I notice small changes in how an animal looks or behaves.' },
+  { c: 'health', t: "I'm curious about CNVR, vaccines and how vets work." },
+];
+const PER_PAGE = 5;
+const PAGES = Math.ceil(STATEMENTS.length / PER_PAGE);
+// Scale positions, left to right: strongly agree ... strongly disagree.
+const SCALE = [
+  { v: 3, cls: 'a s3', label: 'Strongly agree' }, { v: 2, cls: 'a s2', label: 'Agree' }, { v: 1, cls: 'a s1', label: 'Somewhat agree' },
+  { v: 0, cls: 'n s0', label: 'Neutral' },
+  { v: -1, cls: 'd s1', label: 'Somewhat disagree' }, { v: -2, cls: 'd s2', label: 'Disagree' }, { v: -3, cls: 'd s3', label: 'Strongly disagree' },
+];
+
+const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+const TOPIC = 'upusa-committee/v1/';
+const ONLINE_MS = 15000;
+// Public address of the hosted quiz; the QR code uses it when the host runs from localhost or a file.
+const PUBLIC_URL = 'https://s3ryz000.github.io/Committee/';
+const AVATARS = ['🐱', '😺', '🐈', '🐈‍⬛', '🦁', '🐯', '🐭', '🐟', '🧶', '🍜', '🥛', '🐾'];
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+const dots = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const rand = () => Math.random().toString(36).slice(2, 8);
+
+function status(msg) { const el = $('#status'); el.textContent = msg || ''; el.hidden = !msg; }
+function publish(client, topic, m) { if (client && client.connected) client.publish(topic, JSON.stringify(m), { qos: 1 }); }
+function parse(payload) { try { const m = JSON.parse(payload.toString()); return m && typeof m === 'object' ? m : null; } catch (e) { return null; } }
+function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return s; }
+function isPrivateHost() { return location.protocol === 'file:' || /^(localhost|127\.|\[::1\])/.test(location.hostname); }
+function baseUrl() {
+  if (isPrivateHost() && PUBLIC_URL) return PUBLIC_URL.replace(/\/?$/, '/');
+  return location.origin + location.pathname.replace(/index\.html$/, '');
+}
+function joinLink(code) { return baseUrl() + '?room=' + code; }
+function shortLink() { return baseUrl().replace(/^https?:\/\//, '').replace(/\/$/, ''); }
+
+// Scores each committee 0-100 from the answers ({statementIndex: -3..3}).
+function score(answers) {
+  const sum = {}, max = {};
+  ORDER.forEach(c => { sum[c] = 0; max[c] = 0; });
+  STATEMENTS.forEach((s, i) => { max[s.c] += 3; if (answers[i] !== undefined) sum[s.c] += answers[i]; });
+  const pct = {};
+  ORDER.forEach(c => { pct[c] = Math.round((sum[c] + max[c]) / (2 * max[c]) * 100); });
+  const top = ORDER.reduce((a, b) => (pct[b] > pct[a] ? b : a), ORDER[0]);
+  return { top, pct };
+}
+
+/* ---------------- Landing ---------------- */
+
+function landing() {
+  const saved = store.get('ucq-host');
+  app.innerHTML = `
+  <main class="landing">
+    <div class="brand">
+      ${dots}
+      <p class="eyebrow">You and A Pusa</p>
+      <h1 class="display">Which Committee Are You?</h1>
+      <p>20 quick statements, about 3 minutes. Find where you fit in the clowder.</p>
+    </div>
+    <div class="choices">
+      <section class="card">
+        <h2>Host</h2>
+        <p>Open this on the projector. Members scan the QR code and their results appear live.</p>
+        <button id="host-new" class="btn primary">Start hosting</button>
+        ${saved ? `<button id="host-resume" class="btn">Resume session ${esc(saved.code)}</button>` : ''}
+      </section>
+      <section class="card">
+        <h2>Take the quiz</h2>
+        <form id="code-form">
+          <label for="code-in">Code from the big screen</label>
+          <input id="code-in" class="big-in code" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="ABCDE">
+          <button class="btn primary">Join</button>
+        </form>
+        <button class="linkbtn" id="solo">No code? Take it on your own</button>
+      </section>
+    </div>
+  </main>`;
+  $('#host-new').onclick = () => hostStart(false);
+  const r = $('#host-resume');
+  if (r) r.onclick = () => hostStart(true);
+  $('#code-form').onsubmit = e => {
+    e.preventDefault();
+    const code = $('#code-in').value.trim().toUpperCase();
+    history.replaceState(null, '', '?room=' + code);
+    playerJoinScreen(code);
+  };
+  $('#solo').onclick = () => startSolo();
+}
+
+/* ---------------- Host ---------------- */
+
+const H = {};
+
+function hostStart(resume) {
+  const saved = resume ? store.get('ucq-host') : null;
+  Object.assign(H, { code: saved ? saved.code : makeCode(), players: new Map(), qrOpen: true, ready: false });
+  if (saved) for (const p of saved.players) H.players.set(p.id, { ...p, seen: 0 });
+  app.innerHTML = `<main class="landing"><div class="brand">${dots}<h1 class="display">Which Committee Are You?</h1><p>Opening a room…</p></div></main>`;
+  hostConnect(0);
+  clearInterval(H.presence);
+  H.presence = setInterval(hostUpdate, 3000);
+}
+
+function hostConnect(bi) {
+  if (H.client) { try { H.client.end(true); } catch (e) {} }
+  const client = mqtt.connect(BROKERS[bi], { clientId: 'ucq-h-' + H.code + '-' + rand(), clean: true, keepalive: 20, reconnectPeriod: 2000, connectTimeout: 8000 });
+  H.client = client;
+  let up = false;
+  const giveUp = setTimeout(() => {
+    if (up) return;
+    if (bi + 1 < BROKERS.length) hostConnect(bi + 1);
+    else { client.end(true); app.innerHTML = `<main class="landing"><div class="brand">${dots}<h1 class="display">Which Committee Are You?</h1><p>Could not reach the server. Check the internet connection, then refresh this page.</p></div></main>`; }
+  }, 9000);
+  client.on('connect', () => {
+    up = true;
+    clearTimeout(giveUp);
+    client.subscribe(TOPIC + H.code + '/up', { qos: 1 }, () => {
+      status('');
+      if (!H.ready) { H.ready = true; hostSave(); hostRender(); }
+    });
+  });
+  client.on('message', (topic, payload) => { const m = parse(payload); if (m) hostOnData(m); });
+  client.on('offline', () => { if (up) status('Reconnecting to the server…'); });
+  client.on('error', err => console.warn('Relay error', err && err.message));
+}
+function hostSend(id, m) { publish(H.client, TOPIC + H.code + '/p/' + id, m); }
+
+function hostSave() {
+  store.set('ucq-host', { code: H.code, players: [...H.players.values()].map(({ id, name, email, avatar, answered, result }) => ({ id, name, email, avatar, answered, result })) });
+}
+
+const isOnline = p => Date.now() - p.seen < ONLINE_MS;
+
+function cleanResult(r) {
+  if (!r || typeof r !== 'object' || !ORDER.includes(r.top) || !r.pct) return null;
+  const pct = {};
+  for (const c of ORDER) { const v = Number(r.pct[c]); if (!(v >= 0 && v <= 100)) return null; pct[c] = Math.round(v); }
+  return { top: r.top, pct, at: Number(r.at) || Date.now() };
+}
+
+function hostOnData(m) {
+  const id = String(m.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 40);
+  if (!id) return;
+  if (m.t === 'join') {
+    const name = String(m.name || '').trim().slice(0, 30);
+    const email = String(m.email || '').trim().slice(0, 80);
+    const avatar = AVATARS.includes(m.avatar) ? m.avatar : AVATARS[0];
+    if (!name) return hostSend(id, { t: 'error', msg: 'Enter your name first.' });
+    const clash = [...H.players.values()].find(p => p.name.toLowerCase() === name.toLowerCase() && p.id !== id);
+    if (clash) return hostSend(id, { t: 'error', msg: `Someone already joined as “${name}”. Add your last name or initial.` });
+    let p = H.players.get(id);
+    if (!p) { p = { id, answered: 0, result: null }; H.players.set(id, p); }
+    Object.assign(p, { name, email, avatar, seen: Date.now() });
+    p.answered = Math.min(STATEMENTS.length, Math.max(p.answered || 0, Number(m.answered) || 0));
+    const r = cleanResult(m.result);
+    if (r) { p.result = r; p.answered = STATEMENTS.length; }
+    hostSave();
+    hostSend(id, { t: 'welcome', got: !!p.result });
+    hostUpdate();
+    return;
+  }
+  const p = H.players.get(id);
+  if (!p) return hostSend(id, { t: 'rejoin' });
+  if (m.t === 'bye') { p.seen = 0; hostUpdate(); return; }
+  p.seen = Date.now();
+  if (m.t === 'progress') {
+    if (m.reset) { p.result = null; hostSave(); }
+    if (!p.result) p.answered = Math.min(STATEMENTS.length, Math.max(0, Number(m.answered) || 0));
+    hostUpdate();
+  } else if (m.t === 'result') {
+    const r = cleanResult(m.result);
+    if (!r) return;
+    p.result = r;
+    p.answered = STATEMENTS.length;
+    hostSave();
+    hostSend(id, { t: 'got' });
+    hostUpdate();
+  }
+}
+
+function qrImg(text) {
+  try {
+    const q = qrcode(0, 'M');
+    q.addData(text);
+    q.make();
+    const n = q.getModuleCount(), cell = 8, margin = 2, size = (n + margin * 2) * cell;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, size, size);
+    g.fillStyle = '#000';
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect((k + margin) * cell, (r + margin) * cell, cell, cell);
+    return `<img src="${c.toDataURL('image/png')}" alt="QR code to take the quiz">`;
+  } catch (e) {
+    console.warn('QR code failed', e);
+    return '<p class="qr-fail">Type the link below to join.</p>';
+  }
+}
+
+function panelHtml() {
+  const unreachable = isPrivateHost() && !PUBLIC_URL;
+  return `<aside class="joinpanel">
+    <div class="qr">${qrImg(joinLink(H.code))}</div>
+    ${unreachable ? '<p class="qr-warn">This screen is running from this computer, so phones can\'t open this QR code.</p>' : ''}
+    <h3>Scan to join</h3>
+    <p class="url">${esc(shortLink())}</p>
+    <div class="code">${H.code}</div>
+  </aside>`;
+}
+
+function hostRender() {
+  if (!H.ready) return;
+  app.innerHTML = `<div class="host ${H.qrOpen ? 'with-panel' : ''}">
+    ${H.qrOpen ? panelHtml() : ''}
+    <div class="stage">
+      <header class="topbar">
+        <span>Join at <b>${esc(shortLink())}</b></span><span class="code-pill">${H.code}</span>
+        <span class="grow"></span>
+        <span class="count" id="count"></span>
+        <button class="btn small" id="qr-toggle">${H.qrOpen ? 'Hide QR' : 'Show QR'}</button>
+      </header>
+      <main class="screen">
+        <div class="host-head">
+          <div><p class="eyebrow">You and A Pusa</p><h1 class="display">Which Committee Are You?</h1></div>
+          <div class="stats">
+            <div class="stat"><b id="st-joined">0</b><span>joined</span></div>
+            <div class="stat"><b id="st-answering">0</b><span>answering</span></div>
+            <div class="stat"><b id="st-done">0</b><span>finished</span></div>
+          </div>
+        </div>
+        <div class="share" id="share" aria-hidden="true">${ORDER.map(c => `<span class="${COMMITTEES[c].cls}" data-c="${c}" style="flex-grow:0"></span>`).join('')}</div>
+        <div class="tally">${ORDER.map(c => `
+          <section class="col">
+            <header class="col-head ${COMMITTEES[c].cls}">
+              <span class="emo">${COMMITTEES[c].emoji}</span>
+              <span><span class="nm">${COMMITTEES[c].name}</span><br><span class="ty">${COMMITTEES[c].type}</span></span>
+              <span class="n" id="n-${c}">0</span>
+            </header>
+            <ul class="col-names" id="names-${c}"></ul>
+          </section>`).join('')}
+        </div>
+        <div class="answering" id="answering"></div>
+      </main>
+      <footer class="controls">
+        <button id="quit" class="btn">End session</button>
+        <span class="hint" id="hint"></span>
+        <button id="csv" class="btn primary">Download results (CSV)</button>
+      </footer>
+    </div>
+  </div>`;
+  $('#qr-toggle').onclick = () => { H.qrOpen = !H.qrOpen; hostRender(); };
+  $('#csv').onclick = downloadCsv;
+  $('#quit').onclick = hostQuit;
+  hostUpdate();
+}
+
+function setHtml(el, html) { if (el && el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } }
+
+function hostUpdate() {
+  if (!H.ready || !$('#st-joined')) return;
+  const all = [...H.players.values()];
+  const done = all.filter(p => p.result);
+  const answering = all.filter(p => !p.result);
+  $('#st-joined').textContent = all.length;
+  $('#st-answering').textContent = answering.length;
+  $('#st-done').textContent = done.length;
+  $('#count').textContent = `${plural(all.filter(isOnline).length, 'person')} online`.replace('persons', 'people');
+  $('#hint').textContent = done.length ? `${plural(done.length, 'result')} ready to download` : 'Results appear here as people finish';
+  for (const c of ORDER) {
+    const list = done.filter(p => p.result.top === c).sort((a, b) => a.result.at - b.result.at);
+    $('#n-' + c).textContent = list.length;
+    const seg = document.querySelector(`#share [data-c="${c}"]`);
+    if (seg) seg.style.flexGrow = list.length;
+    setHtml($('#names-' + c), list.map(p => `<li class="chip"><span class="av">${p.avatar}</span>${esc(p.name)}</li>`).join(''));
+  }
+  setHtml($('#answering'), answering.length
+    ? '<span class="eyebrow">Still answering</span>' + answering.map(p =>
+        `<span class="chip ${isOnline(p) ? '' : 'off'}"><span class="av">${p.avatar}</span>${esc(p.name)} <small>${p.answered || 0}/${STATEMENTS.length}</small></span>`).join('')
+    : '');
+}
+
+function downloadCsv() {
+  const q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const rows = [['Name', 'Email', 'Committee', 'Result type', ...ORDER.map(c => COMMITTEES[c].name + ' %'), 'Finished at']];
+  const list = [...H.players.values()].sort((a, b) => (a.result ? 0 : 1) - (b.result ? 0 : 1) || a.name.localeCompare(b.name));
+  for (const p of list) {
+    const r = p.result;
+    rows.push([p.name, p.email || '', r ? COMMITTEES[r.top].name : '(not finished)', r ? COMMITTEES[r.top].type : '',
+      ...ORDER.map(c => (r ? r.pct[c] : '')), r ? new Date(r.at).toLocaleString() : '']);
+  }
+  const csv = '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `committee-results-${H.code}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function hostQuit() {
+  const done = [...H.players.values()].filter(p => p.result).length;
+  const q = $('#quit');
+  if (done && q.dataset.armed !== '1') {
+    q.dataset.armed = '1';
+    q.textContent = 'Click again to end (download first!)';
+    setTimeout(() => { if (q.isConnected) { q.dataset.armed = ''; q.textContent = 'End session'; } }, 4000);
+    return;
+  }
+  clearInterval(H.presence);
+  store.del('ucq-host');
+  try { H.client.end(true); } catch (e) {}
+  H.client = null;
+  H.ready = false;
+  landing();
+}
+
+window.addEventListener('beforeunload', e => {
+  if (H.client && [...H.players.values()].some(p => p.result)) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------------- Player ---------------- */
+
+function playerId() {
+  let id = store.get('ucq-pid');
+  if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); store.set('ucq-pid', id); }
+  return id;
+}
+
+const P = {
+  id: playerId(), code: '', client: null, bi: 0, joined: false, solo: false, sent: false,
+  me: store.get('ucq-me') || { name: '', email: '', avatar: AVATARS[0] },
+  st: null, beat: null, joinTimer: null,
+};
+
+// Quiz progress is saved per room code so a refresh doesn't lose answers.
+function loadState(code) {
+  const key = 'ucq-state-' + (code || 'solo');
+  let st = store.get(key);
+  if (!st || !Array.isArray(st.order) || st.order.length !== STATEMENTS.length) {
+    const order = STATEMENTS.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    st = { order, answers: {}, page: 0, result: null };
+  }
+  st.key = key;
+  return st;
+}
+function saveState() { if (P.st) store.set(P.st.key, P.st); }
+const answeredCount = () => Object.keys(P.st.answers).length;
+
+function phoneHead(left) {
+  return `<header class="phone-head">${left}${P.me.name ? `<span class="me">${P.me.avatar} ${esc(P.me.name)}</span>` : ''}</header>`;
+}
+
+function playerJoinScreen(code, err) {
+  status('');
+  app.innerHTML = `<main class="phone">
+    <header class="phone-head"><span class="logo">${dots}Which Committee?</span></header>
+    <form id="join" class="join" novalidate>
+      <label for="j-code">Code</label>
+      <input id="j-code" class="big-in code" maxlength="5" autocomplete="off" autocapitalize="characters" value="${esc(code || '')}" placeholder="ABCDE">
+      <label for="j-name">Your name</label>
+      <input id="j-name" class="big-in" maxlength="30" autocomplete="name" value="${esc(P.me.name)}" placeholder="e.g. Juan dela Cruz">
+      <label for="j-email">UA&amp;P email</label>
+      <input id="j-email" class="big-in" type="email" maxlength="80" autocomplete="email" inputmode="email" value="${esc(P.me.email)}" placeholder="yourname@uap.asia">
+      <fieldset class="avatars"><legend>Pick an avatar</legend>
+        ${AVATARS.map((a, i) => `<label class="av-opt" for="av-${i}"><input type="radio" name="av" id="av-${i}" value="${a}" ${a === P.me.avatar ? 'checked' : ''}><span>${a}</span></label>`).join('')}
+      </fieldset>
+      <p class="err" id="j-err" ${err ? '' : 'hidden'}>${esc(err || '')}</p>
+      <button class="btn primary block" id="j-go">Join and start</button>
+      <button type="button" class="linkbtn" id="solo">Take it on your own instead</button>
+    </form>
+  </main>`;
+  $('#solo').onclick = () => startSolo();
+  $('#join').onsubmit = e => {
+    e.preventDefault();
+    const c = $('#j-code').value.trim().toUpperCase();
+    const name = $('#j-name').value.trim();
+    const email = $('#j-email').value.trim();
+    const av = document.querySelector('input[name=av]:checked');
+    const errEl = $('#j-err');
+    const fail = msg => { errEl.textContent = msg; errEl.hidden = false; };
+    if (c.length !== 5) return fail('The code has 5 characters. It is on the big screen.');
+    if (!name) return fail('Enter your name so the officers know who you are.');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return fail('Enter your email, like yourname@uap.asia.');
+    P.code = c;
+    P.me = { name: name.slice(0, 30), email: email.slice(0, 80), avatar: av ? av.value : AVATARS[0] };
+    store.set('ucq-me', P.me);
+    history.replaceState(null, '', '?room=' + c);
+    const btn = $('#j-go');
+    btn.disabled = true;
+    btn.textContent = 'Joining…';
+    errEl.hidden = true;
+    P.st = loadState(c);
+    playerConnect();
+  };
+}
+
+function joinFail(msg) {
+  P.joined = false;
+  clearTimeout(P.joinTimer);
+  clearInterval(P.beat);
+  try { P.client.end(true); } catch (e) {}
+  playerJoinScreen(P.code, msg);
+}
+
+function playerConnect(bi) {
+  clearTimeout(P.joinTimer);
+  clearInterval(P.beat);
+  if (P.client) { try { P.client.end(true); } catch (e) {} }
+  if (bi === undefined) bi = P.joined ? P.bi : 0;
+  P.bi = bi;
+  const up = TOPIC + P.code + '/up';
+  const client = mqtt.connect(BROKERS[bi], {
+    clientId: 'ucq-p-' + rand() + rand(), clean: true, keepalive: 20, reconnectPeriod: 2000, connectTimeout: 8000,
+    will: { topic: up, payload: JSON.stringify({ t: 'bye', id: P.id }), qos: 0, retain: false },
+  });
+  P.client = client;
+  P.joinTimer = setTimeout(() => {
+    if (P.client !== client || P.joined) return;
+    client.end(true);
+    if (bi + 1 < BROKERS.length) playerConnect(bi + 1);
+    else joinFail(`No session found with code ${P.code}. Make sure the host screen is open and the code matches.`);
+  }, 8000);
+  client.on('connect', () => {
+    client.subscribe(TOPIC + P.code + '/p/' + P.id, { qos: 1 }, () => sendJoin());
+  });
+  client.on('message', (topic, payload) => { if (P.client === client) { const m = parse(payload); if (m) playerOnData(m); } });
+  client.on('offline', () => { if (P.joined && P.client === client) status('Connection lost. Reconnecting…'); });
+  // Heartbeat; also keeps resending a finished result until the host confirms it.
+  P.beat = setInterval(() => {
+    if (!P.joined) return;
+    if (P.st.result && !P.sent) pSend({ t: 'result', result: P.st.result });
+    else pSend({ t: 'ping' });
+  }, 5000);
+}
+function sendProgress() {
+  clearTimeout(P.progT);
+  P.progT = setTimeout(() => pSend({ t: 'progress', answered: answeredCount() }), 700);
+}
+function pSend(m) { if (!P.solo) publish(P.client, TOPIC + P.code + '/up', { ...m, id: P.id }); }
+function sendJoin() {
+  pSend({ t: 'join', name: P.me.name, email: P.me.email, avatar: P.me.avatar, answered: answeredCount(), result: P.st.result });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && P.joined && P.client && !P.client.connected) P.client.reconnect();
+});
+
+function playerOnData(m) {
+  clearTimeout(P.joinTimer);
+  status('');
+  if (m.t === 'error') return joinFail(m.msg);
+  if (m.t === 'rejoin') return sendJoin();
+  if (m.t === 'welcome') {
+    const first = !P.joined;
+    P.joined = true;
+    if (m.got) P.sent = true;
+    if (first) { if (P.st.result) pResult(); else pQuiz(); }
+    else if (P.st.result && !m.got) sendJoin();
+    updateSent();
+  } else if (m.t === 'got') {
+    P.sent = true;
+    updateSent();
+  }
+}
+
+function startSolo() {
+  P.solo = true;
+  P.joined = false;
+  P.st = loadState(null);
+  history.replaceState(null, '', location.pathname);
+  if (P.st.result) pResult(); else pQuiz();
+}
+
+/* ---- Questionnaire ---- */
+
+function pQuiz() {
+  const page = P.st.page;
+  const idxs = P.st.order.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE);
+  const last = page === PAGES - 1;
+  app.innerHTML = `<div class="quiz">
+    <div class="qtop">
+      <div class="qtop-row"><span class="logo">${dots}Which Committee?</span><span id="prog-label"></span></div>
+      <div class="prog"><span id="prog" style="--p:0"></span></div>
+    </div>
+    ${page === 0 ? `<div class="qintro"><h1 class="display">How much do you agree?</h1><p>Answer honestly. There are no wrong answers${P.me.name && !P.solo ? `, ${esc(P.me.name.split(' ')[0])}` : ''}.</p></div>` : ''}
+    ${idxs.map((i, k) => `
+      <section class="stmt" data-i="${i}" id="st-${k}">
+        <p id="q-${i}">${esc(STATEMENTS[i].t)}</p>
+        <div class="scale" role="radiogroup" aria-labelledby="q-${i}">
+          <span class="side a" aria-hidden="true">Agree</span>
+          ${SCALE.map(s => `<button type="button" class="dot ${s.cls}" role="radio" aria-checked="false" aria-label="${s.label}" data-v="${s.v}"></button>`).join('')}
+          <span class="side d" aria-hidden="true">Disagree</span>
+        </div>
+        <div class="sm-sides" aria-hidden="true"><span class="a">Agree</span><span class="d">Disagree</span></div>
+      </section>`).join('')}
+    <div class="qnav">
+      ${page > 0 ? '<button class="btn" id="back">Back</button>' : ''}
+      <button class="btn primary" id="next">${last ? 'See my result' : 'Next'}</button>
+    </div>
+  </div>`;
+  document.querySelectorAll('.stmt').forEach(sec => {
+    const i = Number(sec.dataset.i);
+    sec.querySelectorAll('.dot').forEach(b => {
+      b.onclick = () => {
+        const firstTime = P.st.answers[i] === undefined;
+        P.st.answers[i] = Number(b.dataset.v);
+        saveState();
+        paintStatements();
+        if (firstTime) {
+          sendProgress();
+          const nextSec = [...document.querySelectorAll('.stmt')].find(s => P.st.answers[s.dataset.i] === undefined);
+          (nextSec || $('#next')).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+    });
+  });
+  const back = $('#back');
+  if (back) back.onclick = () => { P.st.page--; saveState(); pQuiz(); window.scrollTo(0, 0); };
+  $('#next').onclick = () => {
+    const missing = [...document.querySelectorAll('.stmt')].find(s => P.st.answers[s.dataset.i] === undefined);
+    if (missing) { missing.scrollIntoView({ behavior: 'smooth', block: 'center' }); missing.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return; }
+    if (last) finish();
+    else { P.st.page++; saveState(); pQuiz(); window.scrollTo(0, 0); }
+  };
+  paintStatements();
+}
+
+function paintStatements() {
+  const secs = [...document.querySelectorAll('.stmt')];
+  const activeIdx = secs.findIndex(s => P.st.answers[s.dataset.i] === undefined);
+  secs.forEach((sec, k) => {
+    const v = P.st.answers[sec.dataset.i];
+    sec.classList.toggle('done', v !== undefined);
+    sec.classList.toggle('active', k === activeIdx);
+    sec.classList.toggle('upcoming', activeIdx >= 0 && k > activeIdx);
+    sec.querySelectorAll('.dot').forEach(b => {
+      const on = v !== undefined && Number(b.dataset.v) === v;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', on);
+    });
+  });
+  const n = answeredCount();
+  $('#prog').style.setProperty('--p', n / STATEMENTS.length);
+  $('#prog-label').textContent = `${n} of ${STATEMENTS.length}`;
+  const allDone = secs.every(s => P.st.answers[s.dataset.i] !== undefined);
+  $('#next').classList.toggle('primary', allDone);
+}
+
+function finish() {
+  const r = score(P.st.answers);
+  P.st.result = { ...r, at: Date.now() };
+  saveState();
+  P.sent = false;
+  clearTimeout(P.progT);
+  pSend({ t: 'result', result: P.st.result });
+  pResult();
+  window.scrollTo(0, 0);
+}
+
+function pResult() {
+  const r = P.st.result;
+  const c = COMMITTEES[r.top];
+  const ranked = ORDER.slice().sort((a, b) => r.pct[b] - r.pct[a]);
+  app.innerHTML = `
+    <header class="result-hero ${c.cls}">
+      <p class="eyebrow">${P.me.name && !P.solo ? esc(P.me.name) + ', you are' : 'You are'}</p>
+      <div class="emo" aria-hidden="true">${c.emoji}</div>
+      <h1 class="display">${c.type}</h1>
+      <p class="sub">${c.name} Committee</p>
+    </header>
+    <main class="result-body">
+      <p class="blurb">${esc(c.blurb)}</p>
+      <p class="desc">${esc(c.desc)}</p>
+      <p class="lead">Led by ${esc(c.lead)}. Say hi after the GA!</p>
+      <section class="bars" aria-label="Your match with each committee">
+        <p class="eyebrow">Your match with each committee</p>
+        ${ranked.map(k => `
+          <div class="bar-row">
+            <div class="bar-top"><span>${COMMITTEES[k].emoji} ${COMMITTEES[k].name}</span><span>${r.pct[k]}%</span></div>
+            <div class="track"><span style="--p:0;background:${COMMITTEES[k].color}" data-p="${r.pct[k]}"></span></div>
+          </div>`).join('')}
+      </section>
+      <p class="sent" id="sent"></p>
+      <button class="linkbtn" id="retake" style="justify-self:center">Retake the quiz</button>
+    </main>`;
+  setTimeout(() => document.querySelectorAll('.track span').forEach(s => s.style.setProperty('--p', s.dataset.p)), 60);
+  $('#retake').onclick = () => {
+    P.st.answers = {}; P.st.page = 0; P.st.result = null; P.sent = false;
+    saveState();
+    pSend({ t: 'progress', answered: 0, reset: true });
+    pQuiz();
+    window.scrollTo(0, 0);
+  };
+  updateSent();
+}
+
+function updateSent() {
+  const el = $('#sent');
+  if (!el) return;
+  if (P.solo) { el.textContent = 'Taken on your own, so this result stays on your phone.'; el.className = 'sent'; }
+  else if (P.sent) { el.textContent = '✓ Sent to the big screen'; el.className = 'sent ok'; }
+  else { el.textContent = 'Sending to the big screen…'; el.className = 'sent'; }
+}
+
+/* ---------------- Boot ---------------- */
+
+const room = (new URLSearchParams(location.search).get('room') || '').trim().toUpperCase();
+if (typeof mqtt === 'undefined') {
+  app.innerHTML = `<main class="landing"><div class="brand">${dots}<h1 class="display">Which Committee Are You?</h1><p>The quiz could not load. Check your internet connection and refresh.</p></div></main>`;
+} else if (room) {
+  P.code = room;
+  playerJoinScreen(room);
+} else {
+  landing();
+}
+</script>
+</body>
+</html>
